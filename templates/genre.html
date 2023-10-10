@@ -1,0 +1,13 @@
+<body>
+    <table class="center" style="background-color:white">
+     	<tr style = "background-color: gray">
+            <th>Genres:</th>
+        </tr>
+        {% for genre in genres %}
+            <tr>
+                <td>{{ genre[1] }}</td> <!--lists genres-->
+                <td>{{ genre[0] }}</td> <!--lists genres-->
+            </tr>
+        {% endfor %}
+    </table>
+</body>
