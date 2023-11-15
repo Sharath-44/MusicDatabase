@@ -12,8 +12,11 @@ body {
 nav {
     flex-wrap: wrap;
     float: top;
-    /*visibility: hidden;*/
     z-index: 6;
+}
+
+.navbar-brand {
+    text-align: center;
 }
 
 .sides {
@@ -32,7 +35,7 @@ nav {
   z-index: 1;
   width: 30%;
   left: 0;
-  background-color: #462;
+  background-color: #1DB954;
 
 }
 
@@ -193,7 +196,7 @@ p text{
     padding-top: 100px;
     overflow-y: auto;
     z-index: 0;
-    background-color: #23231F;
+    background-color: black;
 }
 
 .page:target {
