@@ -227,16 +227,40 @@ class SQLSetup:
         """)
         c.close()
 
+    def create_before_user_update_procedure(self, db):
+        c = db.cursor()
+        c.execute("""CREATE PROCEDURE before_user_update_procedure(
+                            IN old_username VARCHAR(255),
+                            IN new_username VARCHAR(255),
+                            IN change_date DATETIME)
+                            BEGIN
+                                INSERT INTO user_audit
+                                SET action = 'update',
+                                    username = old_username,
+                                    newUsername = new_username,
+                                    changeDate = change_date;
+                            END
+                    """)
+        c.close()
+
+    # def before_user_update_trigger(self, db):
+    #     c = db.cursor()
+    #     c.execute("""CREATE TRIGGER before_user_update
+    #                     BEFORE UPDATE ON user
+    #                     FOR EACH ROW
+    #                     INSERT INTO user_audit
+    #                         SET action = 'update',
+    #                             username = OLD.username,
+    #                             newUsername = NEW.username,
+    #                             changeDate = NOW()
+    #             """)
+    #     c.close()
     def before_user_update_trigger(self, db):
         c = db.cursor()
         c.execute("""CREATE TRIGGER before_user_update
                         BEFORE UPDATE ON user
                         FOR EACH ROW
-                        INSERT INTO user_audit
-                            SET action = 'update',
-                                username = OLD.username,
-                                newUsername = NEW.username,
-                                changeDate = NOW()
+                        CALL before_user_update_procedure(OLD.username, NEW.username, NOW())
                 """)
         c.close()
 
