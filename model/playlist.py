@@ -31,10 +31,18 @@ class PlaylistManager:
         )
         return db
 
+    # def insert_playlist(self, playlist):
+    #     db = self.database()
+    #     c = db.cursor()
+    #     sql = "INSERT INTO Playlist (name,username,date) VALUES (%s,%s,%s)"
+    #     c.execute(sql, (playlist.name, playlist.username, playlist.date))
+    #     db.commit()
+    #     c.close()
+    #     db.close()
     def insert_playlist(self, playlist):
         db = self.database()
         c = db.cursor()
-        sql = "INSERT INTO Playlist (name,username,date) VALUES (%s,%s,%s)"
+        sql = "INSERT INTO Playlist (name, username, date) VALUES (%s, %s, %s)"
         c.execute(sql, (playlist.name, playlist.username, playlist.date))
         db.commit()
         c.close()
@@ -72,7 +80,16 @@ class PlaylistManager:
         if playlist is None:
             return None
         return Playlist(playlist[0], playlist[1], playlist[[2]])
-
+    
+    def get_playlist_date(self, username):
+        db =  self.database()
+        c = db.cursor()
+        sql = "SELECT date from Playlist WHERE username = %s"
+        c.execute(sql,(username,))
+        dates = c.fetchall()
+        db.commit()
+        c.close()
+        return dates 
     def get_user_playlists(self, username):
         db = self.database()
         c = db.cursor()
@@ -107,11 +124,11 @@ class PlaylistManager:
         else:
             return True
 
-    def insert_song_in_playlist(self, name, username, songID):
+    def insert_song_in_playlist(self, name, username, songID, date):
         db = self.database()
         c = db.cursor()
-        sql = "INSERT INTO Contains (name, username, songID) VALUES (%s,%s,%s)"
-        c.execute(sql, (name, username, songID))
+        sql = "INSERT INTO Contains (name, username, songID, date) VALUES (%s,%s,%s,%s)"
+        c.execute(sql, (name, username, songID, date))
         db.commit()
         c.close()
         db.close()
@@ -126,6 +143,17 @@ class PlaylistManager:
         c.close()
         db.close()
         return songsList
+
+    def get_date_of_song(self, name, username):
+        db = self.database()
+        c = db.cursor()
+        sql = "SELECT date FROM Contains WHERE name = %s and username = %s"
+        c.execute(sql, (name, username))
+        song_date = c.fetchall()
+        db.commit()
+        c.close()
+        db.close()  # Corrected line
+        return [date[0] for date in song_date]
 
 
     def delete_song_in_playlist(self, name, username, songID):

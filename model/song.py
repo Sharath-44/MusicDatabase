@@ -1,7 +1,7 @@
 import mysql.connector
 
 from config import *
-
+import datetime
 
 class Song:
 
@@ -42,17 +42,32 @@ class SongManager:
         db.close()
         return songsList
 
+    # def search_all_songs(self, search):
+    #     db = self.database()
+    #     c = db.cursor()
+    #     sql = "SELECT * FROM SONG WHERE name LIKE '%' + %s + '%' " \
+    #           "UNION " \
+    #           "SELECT * FROM SONG WHERE artist LIKE '%' + %s + '%'"
+    #     c.execute(sql, (search, search))
+    #     songList = c.fetchall()
+    #     c.close()
+    #     db.close()
+    #     return songList
     def search_all_songs(self, search):
         db = self.database()
         c = db.cursor()
-        sql = "SELECT * FROM SONG WHERE name LIKE '%' + %s + '%' " \
-              "UNION " \
-              "SELECT * FROM SONG WHERE artist LIKE '%' + %s + '%'"
+        sql = """
+            SELECT SONG.*
+            FROM SONG
+            INNER JOIN SONG AS S2 ON SONG.songID = S2.songID
+            WHERE SONG.name LIKE '%' + %s + '%' OR S2.artist LIKE '%' + %s + '%'
+        """
         c.execute(sql, (search, search))
         songList = c.fetchall()
         c.close()
         db.close()
         return songList
+
 
     def search_all_songs_genres(self, search):
         db = self.database()

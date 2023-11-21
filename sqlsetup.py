@@ -54,6 +54,8 @@ class SQLSetup:
         c = db.cursor()
         c.execute("""CREATE TABLE IF NOT EXISTS User (
                         username VARCHAR(255), 
+                        last_login DATE,
+                        log_count INT DEFAULT 0,
                         PRIMARY KEY (username)
         )""")
         c.close()
@@ -63,7 +65,7 @@ class SQLSetup:
         c.execute("""CREATE TABLE IF NOT EXISTS Playlist (
                         name VARCHAR(255),
                         username VARCHAR(255),
-                        date VARCHAR(255),
+                        date DATE,
                         PRIMARY KEY(name, username),
                         FOREIGN KEY (username) REFERENCES User (username)
                             ON DELETE CASCADE 
@@ -125,6 +127,7 @@ class SQLSetup:
                         username VARCHAR(255),
                         songID INTEGER,
                         PRIMARY KEY (name, username, songID),
+                        date DATE,
                         FOREIGN KEY (songID) REFERENCES Song (songID)
                             ON DELETE CASCADE 
                             ON UPDATE CASCADE,
@@ -227,32 +230,30 @@ class SQLSetup:
         """)
         c.close()
 
-    def create_before_user_update_procedure(self, db):
-        c = db.cursor()
-        c.execute("""CREATE PROCEDURE before_user_update_procedure(
-                            IN old_username VARCHAR(255),
-                            IN new_username VARCHAR(255),
-                            IN change_date DATETIME)
-                            BEGIN
-                                INSERT INTO user_audit
-                                SET action = 'update',
-                                    username = old_username,
-                                    newUsername = new_username,
-                                    changeDate = change_date;
-                            END
-                    """)
-        c.close()
 
+    # def create_before_user_update_procedure(self, db):
+    #     c = db.cursor()
+    #     c.execute("""CREATE PROCEDURE before_user_update_procedure(
+    #                         IN old_username VARCHAR(255),
+    #                         IN new_username VARCHAR(255),
+    #                         IN change_date DATETIME)
+    #                         BEGIN
+    #                             INSERT INTO user_audit
+    #                             SET action = 'update',
+    #                                 username = old_username,
+    #                                 newUsername = new_username,
+    #                                 changeDate = change_date;
+    #                         END
+    #                 """)
+    #     c.close()
+
+  
     # def before_user_update_trigger(self, db):
     #     c = db.cursor()
     #     c.execute("""CREATE TRIGGER before_user_update
     #                     BEFORE UPDATE ON user
     #                     FOR EACH ROW
-    #                     INSERT INTO user_audit
-    #                         SET action = 'update',
-    #                             username = OLD.username,
-    #                             newUsername = NEW.username,
-    #                             changeDate = NOW()
+    #                     CALL before_user_update_procedure(OLD.username, NEW.username, NOW())
     #             """)
     #     c.close()
     def before_user_update_trigger(self, db):
@@ -260,7 +261,11 @@ class SQLSetup:
         c.execute("""CREATE TRIGGER before_user_update
                         BEFORE UPDATE ON user
                         FOR EACH ROW
-                        CALL before_user_update_procedure(OLD.username, NEW.username, NOW())
+                        INSERT INTO user_audit
+                            SET action = 'update',
+                                username = OLD.username,
+                                newUsername = NEW.username,
+                                changeDate = NOW()
                 """)
         c.close()
 
