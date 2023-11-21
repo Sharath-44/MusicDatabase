@@ -24,7 +24,7 @@ Melody Vault is a music database project built using MySQL, Flask, and HTML. It 
 
 1. **Clone the Repository:**
     ```bash
-    git clone https://github.com/your-username/melody-vault.git
+    git clone https://github.com/sharath-44/melody-vault.git
     ```
 
 2. **Database Setup:**
