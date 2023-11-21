@@ -1,4 +1,5 @@
 import mysql.connector
+import datetime
 
 from config import *
 
@@ -60,6 +61,45 @@ class UserManager:
         db.commit()
         c.close()
         db.close()
+
+    def update_login_info(self, username):
+        db = self.database()
+        c = db.cursor()
+        today = datetime.date.today()
+
+        c.execute("SELECT last_login, log_count FROM User WHERE username = %s", (username,))
+        result = c.fetchone()
+        if result:
+            last_login, log_count = result
+
+            if last_login == today:
+                log_count += 1
+            else:
+                last_login = today
+                log_count = 1
+
+            c.execute("UPDATE User SET last_login = %s, log_count = %s WHERE username = %s",
+                    (last_login, log_count, username))
+
+            db.commit()
+
+            return log_count
+        else:
+            print('User does not exist')
+
+            c.close()
+            db.close()
+
+            return None
+
+    def get_user_login_info(self, username):
+        db = self.database()
+        c = db.cursor()
+        c.execute("SELECT log_count FROM User WHERE username = %s", (username,))
+        result = c.fetchone()
+        c.close()
+        db.close()
+        return result[0]
 
     def insert_user_genre(self, user, genre):
         db = self.database()

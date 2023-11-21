@@ -1,4 +1,6 @@
 from time import time
+import datetime
+
 
 from flask import *
 
@@ -31,7 +33,11 @@ def home_page():
             message = username + " has been created"
             userManager.insert_user(user)
         else:
-            message = "Hello " + username
+            user_logs = userManager.update_login_info(username)
+            if user_logs is not None:
+                message = "Hello " + username + f", you have logged in {user_logs} times."
+            else:
+                message = "User does not exist."
 
     #
     # elif 'userRating' in request.form:
@@ -39,7 +45,7 @@ def home_page():
     else:
         username = request.cookies.get('username')
         user = User(username)
-        message = "Hello " + username
+        message = "Hello " + username + f", you have logged in {userManager.get_user_login_info(username)} times."
     genres = userManager.get_user_genre(user)
     songManager = SongManager()
     songList = songManager.get_songs()
@@ -48,9 +54,10 @@ def home_page():
     playlists = playlistManager.get_user_playlists(username)
     listofgenres = playlistManager.genre_list(playlists, username)
     popular_songs = songManager.song_in_every_playlist()
+    playlist_dates = playlistManager.get_playlist_date(username)
     resp = make_response(
         render_template("index.html", message=message, genres=genres, songList=songList, playlists=playlists,
-                        genrelists=listofgenres, popular_songs=popular_songs))
+                        genrelists=listofgenres, popular_songs=popular_songs, dates=playlist_dates))
     resp.set_cookie('username', username)
     return resp
 
@@ -61,28 +68,48 @@ def add_song_to_playlist():
     name = request.cookies.get('playlist_name')
     addSong = request.form['addSong']
     playlistManager = PlaylistManager()
-    playlistManager.insert_song_in_playlist(name, username, addSong)
-
+    today_date = datetime.datetime.now().date()
+    playlistManager.insert_song_in_playlist(name, username, addSong, today_date)
+    
     songManager = SongManager()
     songList = songManager.get_songs()
-
     playlistSong = playlistManager.get_songs_in_playlist(name, username)
-
-    resp = make_response(render_template("playlist.html", songList=songList, playlistSong=playlistSong))
+    # dates = []
+    dates = playlistManager.get_date_of_song(name, username)
+    resp = make_response(render_template("playlist.html", songList=songList, playlistSong=playlistSong, songDate=dates))
     return resp
 
+
+# @app.route('/createPlaylist', methods=['POST'])
+# def create_playlist_button():
+#     username = request.cookies.get('username')
+#     name = request.form['plName']
+#     playlistManager = PlaylistManager()
+#     today_date = datetime.now().date()
+#     if not playlistManager.is_playlist_in_user(name, username):
+#         if request.form['visibility'] == "private":
+#             password = request.form['plPassword']
+#             playlistManager.insert_private_playlist(PrivatePlaylist(name, username, today_date, password))
+#         else:  
+#             playlistManager.insert_public_playlist(PublicPlaylist(name, username, today_date))
+#     return redirect('/home#playlist')
 
 @app.route('/createPlaylist', methods=['POST'])
 def create_playlist_button():
     username = request.cookies.get('username')
     name = request.form['plName']
     playlistManager = PlaylistManager()
+
+
+    today_date = datetime.datetime.now().date()
+
     if not playlistManager.is_playlist_in_user(name, username):
         if request.form['visibility'] == "private":
             password = request.form['plPassword']
-            playlistManager.insert_private_playlist(PrivatePlaylist(name, username, time(), password))
+            playlistManager.insert_private_playlist(PrivatePlaylist(name, username, today_date, password))
         else:
-            playlistManager.insert_public_playlist(PublicPlaylist(name, username, time()))
+            playlistManager.insert_public_playlist(PublicPlaylist(name, username, today_date))
+
     return redirect('/home#playlist')
 
 
@@ -98,14 +125,16 @@ def view_playlist_button():
         password = request.form['plPassword']
         if playlistManager.password_check(name,username, password) == True:
             playlistSong = playlistManager.get_songs_in_playlist(name,username)
-            resp = make_response(render_template("playlist.html",songList=songList,playlistSong=playlistSong))
+            dates = playlistManager.get_date_of_song(name, username)
+            resp = make_response(render_template("playlist.html",songList=songList,playlistSong=playlistSong, songDate = dates))
             resp.set_cookie('playlist_name', name)
             return resp
         else:
             return redirect('/home#playlist')
     else:
         playlistSong = playlistManager.get_songs_in_playlist(name,username)
-        resp = make_response(render_template("playlist.html",songList=songList,playlistSong=playlistSong))
+        dates = playlistManager.get_date_of_song(name, username)
+        resp = make_response(render_template("playlist.html",songList=songList,playlistSong=playlistSong, songDate = dates))
         resp.set_cookie('playlist_name', name)
         return resp
 
@@ -166,7 +195,8 @@ def playlist_page():
             if playlistManager.is_playlist_in_user(playlistName, username):
                 playlistManager.delete_playlist(playlistName, username)
             else:
-                playlist = Playlist(playlistName, username, 0)
+                today_date = datetime.datetime.now().date()
+                playlist = Playlist(playlistName, username, today_date)
                 playlistManager.insert_playlist(playlist)
         playlists = playlistManager.get_user_playlists(username)
         resp = make_response(render_template("index.html", playlists=playlists))

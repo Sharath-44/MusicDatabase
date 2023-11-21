@@ -36,16 +36,20 @@
                                 <th>Artist</th>
                                 <th>Duration</th>
                                 <th>Genre</th>
+                                <th>Date</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {% for song in playlistSong %}
-                                <tr style="background-color: #d3f1cb">
-                                    <td>{{ song[1] }}</td>
-                                    <td>{{ song[3] }}</td>
-                                    <td>{{ song[2] }}</td>
-                                    <td>{{ song[4] }}</td>
-                                    </tr>
+                            {% for i in range(playlistSong|length) %}
+                                {% set song = playlistSong[i] %}
+                                {% set date = songDate[i] %}
+                                    <tr style="background-color: #d3f1cb">
+                                        <td>{{ song[1] }}</td>
+                                        <td>{{ song[3] }}</td>
+                                        <td>{{ song[2] }}</td>
+                                        <td>{{ song[4] }}</td>
+                                        <td>{{ date }}</td>
+                                        </tr>
                             {% endfor %}
                         </tbody>
                     <tfoot>
